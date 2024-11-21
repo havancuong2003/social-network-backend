@@ -18,15 +18,16 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png/;
+  // Cho phép các file ảnh JPEG, JPG, PNG và video MP4
+  const allowedTypes = /jpeg|jpg|png|mp4/;
   const extname = allowedTypes.test(
     path.extname(file.originalname).toLowerCase()
   );
 
   if (extname) {
-    cb(null, true);
+    cb(null, true); // Cho phép file hợp lệ
   } else {
-    cb(new Error("Only JPEG, JPG, or PNG files are allowed!"));
+    cb(new Error("Only JPEG, JPG, PNG, or MP4 files are allowed!")); // Hiển thị lỗi khi file không hợp lệ
   }
 };
 
