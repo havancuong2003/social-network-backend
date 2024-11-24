@@ -1,8 +1,12 @@
 import express from "express";
-import { getCommentsByPost } from "../controllers/comment.controller.js";
+import {
+  createComment,
+  getCommentsByPost,
+} from "../controllers/comment.controller.js";
+import { authenticateUser } from "../middleware/authenticate.js";
 
 const router = express.Router();
 
-router.get("/:postId", getCommentsByPost);
-
+router.get("/:postId", authenticateUser, getCommentsByPost);
+router.post("/addComment", authenticateUser, createComment);
 export default router;

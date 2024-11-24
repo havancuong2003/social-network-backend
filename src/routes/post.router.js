@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  changeReact,
   createPost,
   getPost,
   getPosts,
@@ -18,5 +19,7 @@ router.post(
 );
 
 router.get("/:postId", authenticateUser, getPost);
+
+router.post("/changeReact", authenticateUser, changeReact);
 
 export default router;
