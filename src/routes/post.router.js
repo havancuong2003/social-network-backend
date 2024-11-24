@@ -1,5 +1,9 @@
 import express from "express";
-import { createPost, getPosts } from "../controllers/post.controller.js";
+import {
+  createPost,
+  getPost,
+  getPosts,
+} from "../controllers/post.controller.js";
 import { authenticateUser } from "../middleware/authenticate.js";
 import { upload } from "../utils/multer.js";
 
@@ -12,5 +16,7 @@ router.post(
   upload.array("media", 10),
   createPost
 );
+
+router.get("/:postId", authenticateUser, getPost);
 
 export default router;

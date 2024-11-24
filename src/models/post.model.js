@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-    postId: {
-      type: String,
-      unique: true,
-      default: () => new mongoose.Types.ObjectId().toString(), // Sinh ra một postId duy nhất
-    },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

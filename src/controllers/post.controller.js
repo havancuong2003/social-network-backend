@@ -25,11 +25,14 @@ export const getPosts = async (req, res) => {
       leanPost.author.userId = leanPost.author._id;
       leanPost.author.name = leanPost.author.fullName;
       leanPost.author.avatar = leanPost.author.profilePic;
-
+      leanPost.date = leanPost.createdAt.toDateString();
+      leanPost.postId = leanPost._id;
       // Xóa các trường không cần thiết
       delete leanPost.author.profilePic;
       delete leanPost.author.fullName;
       delete leanPost.author._id;
+      delete leanPost.createdAt;
+      delete leanPost._id;
 
       // Tính số lượng like (sử dụng trường `tymedBy` của bạn)
       const numberLike = leanPost.tymedBy ? leanPost.tymedBy.length : 0;
@@ -91,6 +94,54 @@ export const createPost = async (req, res) => {
     res.status(200).json({ ...leanPost, likes: numberLike });
   } catch (error) {
     console.log("Error in createPost controller", error);
+    res.status(500).send("Internal server error");
+  }
+};
+
+export const getPost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    const post = await Post.find({ _id: postId }).populate([
+      {
+        path: "author",
+        select: "fullName userName email profilePic",
+      },
+      {
+        path: "comments", // Populate danh sách bình luận
+        select: "userId userName text userAvatar createdAt",
+      },
+    ]);
+
+    // Dùng .map() để xử lý mỗi bài viết sau khi populate
+    const populatedPosts = post.map((post) => {
+      // Chuyển đổi mỗi post thành object thuần
+      const leanPost = post.toObject();
+
+      // Cập nhật thông tin tác giả
+      leanPost.author.userId = leanPost.author._id;
+      leanPost.author.name = leanPost.author.fullName;
+      leanPost.author.avatar = leanPost.author.profilePic;
+      leanPost.date = leanPost.createdAt.toDateString();
+      leanPost.postId = leanPost._id;
+
+      // Xóa các trường không cần thiết
+      delete leanPost.author.profilePic;
+      delete leanPost.author.fullName;
+      delete leanPost.author._id;
+      delete leanPost.createdAt;
+
+      // Tính số lượng like (sử dụng trường `tymedBy` của bạn)
+      const numberLike = leanPost.tymedBy ? leanPost.tymedBy.length : 0;
+
+      // Trả về kết quả với trường likes
+      return { ...leanPost, likes: numberLike };
+    });
+
+    // Trả về dữ liệu cho người dùng
+    res.status(200).json(populatedPosts);
+  } catch (error) {
+    console.log("Error in getPosts controller", error);
     res.status(500).send("Internal server error");
   }
 };
