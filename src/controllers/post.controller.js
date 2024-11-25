@@ -3,27 +3,34 @@ import { uploadMedia } from "../utils/uploadMediaHelper.js";
 import Comment from "../models/comment.model.js";
 
 export const getPosts = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Lấy page và limit từ query params, mặc định là page 1 và limit 10
+
   try {
-    // Lấy danh sách các bài viết và populate thông tin về tác giả và bình luận
-    const posts = await Post.find().populate([
-      {
-        path: "author", // Populate thông tin tác giả
-        select: "fullName userName email profilePic", // Chọn các trường cần thiết
-      },
-      {
-        path: "comments", // Populate danh sách bình luận
-        select: "user content createdAt", // Populate user and content from Comment schema
-        populate: {
-          path: "user", // Populate user inside each comment
-          select: "userName profilePic", // Select necessary fields from user
+    // Tính toán offset để phân trang
+    const skip = (page - 1) * limit;
+
+    // Lấy danh sách bài viết với phân trang và populate thông tin về tác giả và bình luận
+    const posts = await Post.find()
+      .skip(skip) // Bỏ qua số lượng bài viết từ trước đó
+      .limit(limit) // Giới hạn số lượng bài viết trả về
+      .populate([
+        {
+          path: "author", // Populate thông tin tác giả
+          select: "fullName userName email profilePic", // Chọn các trường cần thiết
         },
-      },
-    ]);
+        {
+          path: "comments", // Populate danh sách bình luận
+          select: "user content createdAt", // Chọn trường user và content từ Comment schema
+          populate: {
+            path: "user", // Populate user trong mỗi bình luận
+            select: "userName profilePic", // Chọn các trường cần thiết từ user
+          },
+        },
+      ]);
 
     // Dùng .map() để xử lý mỗi bài viết sau khi populate
     const populatedPosts = posts.map((post) => {
-      // Chuyển đổi mỗi post thành object thuần
-      const leanPost = post.toObject();
+      const leanPost = post.toObject(); // Chuyển đổi mỗi post thành object thuần
 
       // Cập nhật thông tin tác giả
       leanPost.author.userId = leanPost.author._id;
@@ -49,19 +56,19 @@ export const getPosts = async (req, res) => {
           userId: comment.user._id.toString(),
           userName: comment.user.userName,
           userAvatar: comment.user.profilePic,
-          text: comment.content, // The content of the comment
-          date: comment.createdAt.toDateString(), // Format the date of the comment
+          text: comment.content, // Nội dung bình luận
+          date: comment.createdAt.toDateString(), // Format ngày của bình luận
         };
       });
 
-      // Add the formatted comments to the post object
+      // Thêm các bình luận đã format vào bài viết
       leanPost.comments = formattedComments;
 
       // Trả về kết quả với trường likes
       return { ...leanPost, likes: numberLike };
     });
 
-    // Trả về dữ liệu cho người dùng
+    // Trả về dữ liệu với các bài viết đã phân trang
     res.status(200).json(populatedPosts);
   } catch (error) {
     console.log("Error in getPosts controller", error);
