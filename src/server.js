@@ -3,9 +3,10 @@ import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import authRouter from "./routes/auth.routes.js";
-import uploadRouter from "./routes/upload.routes.js";
-import postRouter from "./routes/post.router.js";
-import commentRouter from "./routes/comment.router.js";
+// import uploadRouter from "./routes/upload.routes.js";
+import postRouter from "./routes/post.routes.js";
+import commentRouter from "./routes/comment.routes.js";
+import userRouter from "./routes/user.routes.js";
 
 import { connectToMongoDb } from "./db/connectToMongoDb.js";
 import cookieParser from "cookie-parser";
@@ -31,9 +32,10 @@ app.use(cookieParser());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRouter);
-app.use("/api/upload", uploadRouter);
+// app.use("/api/upload", uploadRouter);
 app.use("/api/post", postRouter);
 app.use("/api/comment", commentRouter);
+app.use("/api/user", userRouter);
 
 app.listen(PORT, () => {
   connectToMongoDb();

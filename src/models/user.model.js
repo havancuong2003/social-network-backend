@@ -30,6 +30,53 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    biography: {
+      type: String,
+      default: "",
+    },
+    coverPic: {
+      type: String,
+      default:
+        "https://res.cloudinary.com/ddvt5srdy/image/upload/v1732677787/images_k5vtyz.jpg",
+    },
+    birthday: {
+      type: Date,
+      default: null,
+    },
+    location: {
+      type: String,
+      default: "",
+    },
+    relationship: {
+      type: String,
+      default: "",
+    },
+    phone: {
+      type: String,
+      default: "",
+    },
+    website: {
+      type: String,
+      default: "",
+    },
+    education: {
+      type: String,
+      default: "",
+    },
+    work: {
+      type: String,
+      default: "",
+    },
+    socialLinks: {
+      facebook: { type: String, default: "" },
+      instagram: { type: String, default: "" },
+      tiktok: { type: String, default: "" },
+      youtube: { type: String, default: "" },
+      linkedin: { type: String, default: "" },
+      twitter: { type: String, default: "" },
+    },
+
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );

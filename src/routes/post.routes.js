@@ -4,6 +4,7 @@ import {
   createPost,
   getPost,
   getPosts,
+  getPostsByUser,
 } from "../controllers/post.controller.js";
 import { authenticateUser } from "../middleware/authenticate.js";
 import { upload } from "../utils/multer.js";
@@ -18,8 +19,8 @@ router.post(
   createPost
 );
 
-router.get("/:postId", authenticateUser, getPost);
-
+//router.get("/:postId", authenticateUser, getPost);
+router.get("/:userId", authenticateUser, getPostsByUser);
 router.post("/changeReact", authenticateUser, changeReact);
 
 export default router;

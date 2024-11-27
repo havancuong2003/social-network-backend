@@ -236,18 +236,97 @@ export const changeReact = async (req, res) => {
       post.tymedBy = post.tymedBy.filter(
         (id) => id.toString() !== userId.toString()
       );
+      console.log("hi");
     } else {
+      console.log("i am here");
+
       // Nếu không có, thêm tym
       post.tymedBy.push(userId);
     }
 
     // Lưu thay đổi vào cơ sở dữ liệu
     await post.save();
+    console.log("check", post.tymedBy);
 
     // Trả về post sau khi cập nhật
     res.status(200).json(post);
   } catch (error) {
     console.log("Error in changeReact controller", error);
+    res.status(500).send("Internal server error");
+  }
+};
+
+export const getPostsByUser = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Lấy page và limit từ query params, mặc định là page 1 và limit 10
+  const { userId } = req.params;
+
+  try {
+    // Tính toán offset để phân trang
+    const skip = (page - 1) * limit;
+
+    // Lấy danh sách bài viết với phân trang và populate thông tin về tác giả và bình luận
+    const posts = await Post.find({ author: userId })
+      .skip(skip) // Bỏ qua số lượng bài viết từ trước đó
+      .limit(limit) // Giới hạn số lượng bài viết trả về
+      .populate([
+        {
+          path: "author", // Populate thông tin tác giả
+          select: "fullName userName email profilePic", // Chọn các trường cần thiết
+        },
+        {
+          path: "comments", // Populate danh sách bình luận
+          select: "user content createdAt", // Chọn trường user và content từ Comment schema
+          populate: {
+            path: "user", // Populate user trong mỗi bình luận
+            select: "userName profilePic", // Chọn các trường cần thiết từ user
+          },
+        },
+      ]);
+
+    // Dùng .map() để xử lý mỗi bài viết sau khi populate
+    const populatedPosts = posts.map((post) => {
+      const leanPost = post.toObject(); // Chuyển đổi mỗi post thành object thuần
+
+      // Cập nhật thông tin tác giả
+      leanPost.author.userId = leanPost.author._id;
+      leanPost.author.name = leanPost.author.fullName;
+      leanPost.author.avatar = leanPost.author.profilePic;
+      leanPost.date = leanPost.createdAt.toDateString();
+      leanPost.postId = leanPost._id;
+
+      // Xóa các trường không cần thiết
+      delete leanPost.author.profilePic;
+      delete leanPost.author.fullName;
+      delete leanPost.author._id;
+      delete leanPost.createdAt;
+      delete leanPost._id;
+
+      // Tính số lượng like (sử dụng trường `tymedBy` của bạn)
+      const numberLike = leanPost.tymedBy ? leanPost.tymedBy.length : 0;
+
+      // Format the comments for each post
+      const formattedComments = leanPost.comments.map((comment) => {
+        return {
+          _id: comment._id.toString(),
+          userId: comment.user._id.toString(),
+          userName: comment.user.userName,
+          userAvatar: comment.user.profilePic,
+          text: comment.content, // Nội dung bình luận
+          date: comment.createdAt.toDateString(), // Format ngày của bình luận
+        };
+      });
+
+      // Thêm các bình luận đã format vào bài viết
+      leanPost.comments = formattedComments;
+
+      // Trả về kết quả với trường likes
+      return { ...leanPost, likes: numberLike };
+    });
+
+    // Trả về dữ liệu với các bài viết đã phân trang
+    res.status(200).json(populatedPosts);
+  } catch (error) {
+    console.log("Error in getPosts controller", error);
     res.status(500).send("Internal server error");
   }
 };
