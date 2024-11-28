@@ -11,6 +11,7 @@ export const getPosts = async (req, res) => {
 
     // Lấy danh sách bài viết với phân trang và populate thông tin về tác giả và bình luận
     const posts = await Post.find()
+      .sort({ createdAt: -1 }) // Sắp xếp theo ngày tạo mới nhất
       .skip(skip) // Bỏ qua số lượng bài viết từ trước đó
       .limit(limit) // Giới hạn số lượng bài viết trả về
       .populate([
@@ -129,20 +130,22 @@ export const getPost = async (req, res) => {
   try {
     const { postId } = req.params;
 
-    const post = await Post.findById(postId).populate([
-      {
-        path: "author", // Populate the author of the post
-        select: "fullName userName email profilePic", // Select the necessary fields for the post author
-      },
-      {
-        path: "comments", // Populate the comments
-        select: "user content createdAt", // Select the necessary fields from the comment
-        populate: {
-          path: "user", // Populate the user inside each comment
-          select: "userName profilePic", // Select the fields you need from the user
+    const post = await Post.findById(postId)
+      .sort({ createdAt: -1 })
+      .populate([
+        {
+          path: "author", // Populate the author of the post
+          select: "fullName userName email profilePic", // Select the necessary fields for the post author
         },
-      },
-    ]);
+        {
+          path: "comments", // Populate the comments
+          select: "user content createdAt", // Select the necessary fields from the comment
+          populate: {
+            path: "user", // Populate the user inside each comment
+            select: "userName profilePic", // Select the fields you need from the user
+          },
+        },
+      ]);
 
     if (!post) {
       return res.status(404).send("Post not found");
@@ -266,6 +269,7 @@ export const getPostsByUser = async (req, res) => {
 
     // Lấy danh sách bài viết với phân trang và populate thông tin về tác giả và bình luận
     const posts = await Post.find({ author: userId })
+      .sort({ createdAt: -1 }) // Sắp xếp theo ngày tạo mới nhất
       .skip(skip) // Bỏ qua số lượng bài viết từ trước đó
       .limit(limit) // Giới hạn số lượng bài viết trả về
       .populate([
